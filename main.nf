@@ -13,7 +13,7 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-include { MG_ASSEMBLER  } from './workflows/mg-assembler'
+include { MG_ASSEMBLER  }           from './workflows/local/mg-assembler'
 include { PIPELINE_INITIALISATION } from './subworkflows/local/utils_nfcore_mg-assembler_pipeline'
 include { PIPELINE_COMPLETION     } from './subworkflows/local/utils_nfcore_mg-assembler_pipeline'
 /*
@@ -25,7 +25,7 @@ include { PIPELINE_COMPLETION     } from './subworkflows/local/utils_nfcore_mg-a
 //
 // WORKFLOW: Run main analysis pipeline depending on type of input
 //
-workflow NXFCSP_MG_ASSEMBLER {
+workflow MG_ASSEMBLING {
 
     take:
     samplesheet // channel: samplesheet read in from --input
@@ -68,7 +68,7 @@ workflow {
     //
     // WORKFLOW: Run main workflow
     //
-    NXFCSP_MG-ASSEMBLER (
+    MG_ASSEMBLER (
         PIPELINE_INITIALISATION.out.samplesheet
     )
     //
@@ -78,7 +78,7 @@ workflow {
         params.outdir,
         params.monochrome_logs,
         params.hook_url,
-        NXFCSP_MG-ASSEMBLER.out.multiqc_report
+        MG_ASSEMBLER.out.multiqc_report
     )
 }
 

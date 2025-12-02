@@ -94,7 +94,18 @@ workflow PIPELINE_INITIALISATION {
         }
         .map {
             meta, fastqs ->
+            if (meta.single_end) {
                 return [ meta, fastqs.flatten() ]
+            } else {
+                def reads_r1 = []
+                def reads_r2 = []
+                fastqs.each { read_pair ->
+                reads_r1.add(read_pair[0])
+                reads_r2.add(read_pair[1])
+                }
+                return [meta, reads_r1, reads_r2]
+            }
+                
         }
         .set { ch_samplesheet }
 
