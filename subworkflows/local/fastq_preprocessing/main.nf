@@ -7,7 +7,6 @@ include { FASTP } from '../../../modules/local/fastp'
 workflow FASTQ_PREPROCESSING {
     take:
     ch_samplesheet // channel: samplesheet read in from --input
-    ch_versions
     main:
 
     ch_versions = channel.empty()

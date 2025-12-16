@@ -1,14 +1,16 @@
+#!/usr/bin/env python3
+
 import sys
-from Bio import SeqIO
+from Bio import SeqIO # type: ignore
 from pathlib import Path
 
 def process_contigs(
-    filtered_contigs: str,
-    min_len: int = 1000,
-    contig_basename: str = "contig",
-    no_description: bool = False,
-    add_to_description: str = ""
-    ) -> int:
+                    unfiltered_contigs: Path,
+                    min_len: int,
+                    contig_basename: str,
+                    description: bool,
+                    additional_meta: str
+                   ) -> int:
     """
     Осуществляет постобработку контигов: фильтрацию по длине, переименование и формирование описания.
 
@@ -23,14 +25,24 @@ def process_contigs(
     :param filtered_contigs: Путь к выходному FASTA-файлу, в который будут записаны отфильтрованные контиги.
     :param min_len: Минимальная длина контига для включения в выходной файл. По умолчанию 1000.
     :param contig_basename: Базовое имя (префикс) для переименования контигов. По умолчанию "contig".
-    :param no_description: Если True, описание (description) контигов не будет добавлено. По умолчанию False.
-    :param add_to_description: Дополнительная строка, которая будет добавлена к описанию каждого контига. По умолчанию пустая строка.
+    :param description: Если True, описание (description) контигов будет добавлено. По умолчанию True.
+    :param additional_meta: Дополнительная строка, которая будет добавлена к описанию каждого контига. По умолчанию пустая строка.
     :return: Код возврата: 0 при успешном выполнении, 1 при возникновении исключения.
     """
+    def get_new_filename(
+                         old_filename: Path,
+                         old_substring: str,
+                         new_substring: str
+                        ) -> Path:
+        """
+        Заменяет подстроки в базовом имени файла
+        """
+        new_file_basename = old_filename.name.replace(old_substring, new_substring)
+        return old_filename.parent / new_file_basename
+    
     exit_code = 0
-    unfiltered_contigs = next(Path('./').resolve().rglob('*.fasta'), None)
-    if unfiltered_contigs:
-        filtered_contigs = unfiltered_contigs.replace('.fasta', '_filtered.fasta')
+    if unfiltered_contigs.exists(follow_symlinks=True):
+        filtered_contigs = get_new_filename(unfiltered_contigs, '.fa', 'processed_contigs.fa')
         try:
             with open(unfiltered_contigs, 'r') as i_file, open(filtered_contigs, 'a') as o_file:
                 for contig in SeqIO.parse(i_file, "fasta"):
@@ -41,19 +53,20 @@ def process_contigs(
                     # Извлечение информации из исходного ID (формат SPAdes: NODE_1_length_2097_cov_3.0)
                     contig_name_parts = contig.id.split("_")
                     if len(contig_name_parts) < 6:
-                        logger_asmb.warning(f"Некорректный формат ID контига: {contig.id}. Пропускаем.")
+                        print(f"Некорректный формат ID контига: {contig.id}. Пропускаем.")
                         continue
 
                     # Переименовываем контиг
                     contig.id = f"{contig_basename}_{contig_name_parts[1]}"
 
                     # Формируем описание
-                    if no_description:
-                        contig.description = ""
-                    else:
+                    if description:
+                        
                         length = len(contig.seq)
                         spades_cov = contig_name_parts[5]
-                        contig.description = f"length={length};spades_cov={spades_cov};{add_to_description}".rstrip(';')
+                        contig.description = f"length={length};spades_cov={spades_cov};{additional_meta}".rstrip(';')
+                    else:
+                        contig.description = ""
 
                     # Записываем отфильтрованный контиг
                     SeqIO.write(contig, o_file, "fasta")
@@ -61,13 +74,13 @@ def process_contigs(
             return 0
 
         except FileNotFoundError as e:
-            logger_asmb.error(f"Файл не найден: {e}", exc_info=True)
+            print(f"Файл не найден: {e}")
             return 1
         except PermissionError as e:
-            logger_asmb.error(f"Ошибка доступа к файлу: {e}", exc_info=True)
+            print(f"Ошибка доступа к файлу: {e}")
             return 1
         except Exception as e:
-            logger_asmb.error(f"Неожиданная ошибка при обработке контигов: {e}", exc_info=True)
+            print(f"Неожиданная ошибка при обработке контигов: {e}")
             return 1
     else:
         print("В рабочей папке не найдены FASTA-файлы")
@@ -76,8 +89,23 @@ def process_contigs(
 
 
 if __name__ == "__main__":
-    min_len = sys.argv[1]
+    fasta_extensions = ['.fa', '.fasta']
+
+    min_len = int(sys.argv[1])
     contig_basename = sys.argv[2]
-    no_description = sys.argv[3]
-    add_to_description = sys.argv[4]
-    exit(process_contigs())
+    description = bool(sys.argv[3])
+    additional_meta = sys.argv[4]
+    
+    raw_fastas = []
+    for ext in fasta_extensions:
+        ext_fastas = [f for f in Path('./').rglob(pattern=ext)]
+        raw_fastas.extend(ext_fastas)
+
+    for raw_fasta in raw_fastas:
+        process_contigs(
+                        unfiltered_contigs=raw_fasta,
+                        min_len=min_len,
+                        contig_basename=contig_basename,
+                        description=description,
+                        additional_meta=additional_meta
+                       )
