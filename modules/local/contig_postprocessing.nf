@@ -28,15 +28,15 @@ process CONTIG_POSTPROCESSING {
 
     script:
     """
-    for file in *.fa*.gz; do
-        if [ -f "\$file" ]; then
-            zcat "\$file" > $ "\${file%.*}"
+    # Распаковка gzip файлов
+    gunzip -f *.fa*.gz 2>/dev/null || true
 
+    # Обработка
     process_contigs.py ${min_len} ${contig_basename} ${description} ${additional_meta}
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        bipython: \$(python3 -c "import Bio; print(Bio.__version__)")
+        biopython: \$(python3 -c "import Bio; print(Bio.__version__)")
     END_VERSIONS
     """
 }
