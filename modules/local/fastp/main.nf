@@ -17,24 +17,26 @@ process FASTP {
     tuple val(meta), path('*.log')            , emit: log
     tuple val(meta), path('*.fail.fastq.gz')  , optional:true, emit: reads_fail
     tuple val(meta), path('*.merged.fastq.gz'), optional:true, emit: reads_merged
+    tuple val(meta), path('*.unpaired.fastq.gz'), optional:true, emit: reads_unpaired
     path "versions.yml"                       , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
 
     script:
+    def prefix = task.ext.prefix ?: "${meta.id}"
     def discard_trimmed_pass = params.discard_trimmed_pass
     def save_trimmed_fail = params.save_trimmed_fail
     def save_merged = params.save_merged
     
     def trim_poly_x = params.trim_poly_x ? "--trim_poly_x" : ""
     def dedup = params.dedup ? "--dedup" : ""
+    def unpaired_reads = params.keep_unpaired ? "--unpaired1 ${prefix}_R1.unpaired.fastq.gz --unpaired2 ${prefix}_R2.unpaired.fastq.gz":""
     def min_q = params.min_q > 0 ? "-q ${params.min_q}" : ""
     def min_len = params.min_len > 0 ? "-l ${params.min_len}" : ""
-    def additional_params = "${trim_poly_x} ${dedup} ${min_q} ${min_len}"
+    def additional_params = "${trim_poly_x} ${dedup} ${min_q} ${min_len} ${unpaired_reads}"
 
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${meta.id}"
     def adapter_list = adapter_fasta ? "--adapter_fasta ${adapter_fasta}" : ""
     def fail_fastq = save_trimmed_fail && meta.single_end ? "--failed_out ${prefix}.fail.fastq.gz" : save_trimmed_fail && !meta.single_end ? "--failed_out ${prefix}.paired.fail.fastq.gz --unpaired1 ${prefix}_1.fail.fastq.gz --unpaired2 ${prefix}_2.fail.fastq.gz" : ''
     def out_fq1 = discard_trimmed_pass ?: ( meta.single_end ? "--out1 ${prefix}.fastp.fastq.gz" : "--out1 ${prefix}_1.fastp.fastq.gz" )

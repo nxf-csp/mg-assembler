@@ -30,10 +30,15 @@ workflow MG_ASSEMBLER {
     //
     FASTQ_PREPROCESSING(ch_samplesheet)
 
+    // формируем канал нужного формата
+    ch_prepared_reads = FASTQ_PREPROCESSING.out.prepared_fastqs.map {meta, illumina_reads, illumina_reads_unpaired ->
+        [meta, illumina_reads, illumina_reads_unpaired, [], []]
+        }
+
     //
     // METAGENOME_ASSEMBLING
     //
-    METAGENOME_ASSEMBLING(FASTQ_PREPROCESSING.out.prepared_fastqs)
+    METAGENOME_ASSEMBLING(ch_prepared_reads)
 
     //
     // POSTPROCESSING

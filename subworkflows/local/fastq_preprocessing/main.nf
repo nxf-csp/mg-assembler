@@ -1,7 +1,8 @@
 include { MERGE_LANES } from '../../../modules/local/merge_lanes'
 include { FASTQC as FASTQC_RAW } from '../../../modules/nf-core/fastqc'
 include { FASTQC as FASTQC_TRIMMED } from '../../../modules/nf-core/fastqc'
-include { FASTP } from '../../../modules/nf-core/fastp' 
+include { FASTQC as FASTQC_TRIMMED_UNPAIRED } from '../../../modules/nf-core/fastqc'
+include { FASTP } from '../../../modules/local/fastp' 
 
 workflow FASTQ_PREPROCESSING {
     take:
@@ -23,12 +24,14 @@ workflow FASTQ_PREPROCESSING {
 
     // Вторичный QC
     FASTQC_TRIMMED(FASTP.out.reads)
+    FASTQC_TRIMMED_UNPAIRED(FASTP.out.reads_unpaired)
 
     // Формирование данных о версиях и списка QC файлов
     ch_multiqc_files = ch_multiqc_files.mix(
         FASTQC_RAW.out.zip.collect{it[1]},
         FASTP.out.json.collect{it[1]},
-        FASTQC_TRIMMED.out.zip.collect{it[1]}     
+        FASTQC_TRIMMED.out.zip.collect{it[1]},
+        FASTQC_TRIMMED_UNPAIRED.out.zip.collect{it[1]}
         )
 
     ch_versions = ch_versions.mix(
@@ -39,5 +42,5 @@ workflow FASTQ_PREPROCESSING {
     emit:
     ch_versions
     ch_multiqc_files
-    prepared_fastqs  = FASTP.out.reads
+    prepared_fastqs  = FASTP.out.reads.join(FASTP.out.reads_unpaired, by: 0)
 }
