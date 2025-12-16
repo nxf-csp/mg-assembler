@@ -71,17 +71,7 @@
                     "type": "boolean",
                     "default": true
                 }
-            },
-            "required": [
-                "dedup",
-                "discard_trimmed_pass",
-                "keep_unpaired",
-                "min_len",
-                "min_q",
-                "save_merged",
-                "save_trimmed_fail",
-                "trim_poly_x"
-            ]
+            }
         },
         "fasta_postprocessing": {
             "title": "FASTA postprocessing",
@@ -104,8 +94,7 @@
                 "ctg_additional_meta": {
                     "type": "string"
                 }
-            },
-            "required": ["ctg_min_len", "ctg_basename", "ctg_description", "ctg_additional_meta"]
+            }
         },
         "institutional_config_options": {
             "title": "Institutional config options",
