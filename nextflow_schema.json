@@ -36,6 +36,77 @@
                 }
             }
         },
+        "fastp": {
+            "title": "fastp",
+            "type": "object",
+            "description": "Options for Fastp tool",
+            "default": "",
+            "properties": {
+                "dedup": {
+                    "type": "boolean",
+                    "default": true
+                },
+                "discard_trimmed_pass": {
+                    "type": "boolean"
+                },
+                "keep_unpaired": {
+                    "type": "boolean",
+                    "default": true
+                },
+                "min_len": {
+                    "type": "integer",
+                    "default": 70
+                },
+                "min_q": {
+                    "type": "integer",
+                    "default": 20
+                },
+                "save_merged": {
+                    "type": "boolean"
+                },
+                "save_trimmed_fail": {
+                    "type": "boolean"
+                },
+                "trim_poly_x": {
+                    "type": "boolean",
+                    "default": true
+                }
+            },
+            "required": [
+                "dedup",
+                "discard_trimmed_pass",
+                "keep_unpaired",
+                "min_len",
+                "min_q",
+                "save_merged",
+                "save_trimmed_fail",
+                "trim_poly_x"
+            ]
+        },
+        "fasta_postprocessing": {
+            "title": "FASTA postprocessing",
+            "type": "object",
+            "description": "Postprocessing of contigs",
+            "default": "",
+            "properties": {
+                "ctg_min_len": {
+                    "type": "integer",
+                    "default": 1000
+                },
+                "ctg_basename": {
+                    "type": "string",
+                    "default": "contig"
+                },
+                "ctg_description": {
+                    "type": "boolean",
+                    "default": true
+                },
+                "ctg_additional_meta": {
+                    "type": "string"
+                }
+            },
+            "required": ["ctg_min_len", "ctg_basename", "ctg_description", "ctg_additional_meta"]
+        },
         "institutional_config_options": {
             "title": "Institutional config options",
             "type": "object",
@@ -183,6 +254,12 @@
     "allOf": [
         {
             "$ref": "#/$defs/input_output_options"
+        },
+        {
+            "$ref": "#/$defs/fastp"
+        },
+        {
+            "$ref": "#/$defs/fasta_postprocessing"
         },
         {
             "$ref": "#/$defs/institutional_config_options"
