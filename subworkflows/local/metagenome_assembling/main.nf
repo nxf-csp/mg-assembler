@@ -49,10 +49,12 @@ workflow METAGENOME_ASSEMBLING {
                          )
 
     ch_versions.mix(
-        SPADES.out.versions
+        SPADES.out.versions,
+        CONTIG_POSTPROCESSING.out.versions
     )
 
     emit:
     prepared_contigs = CONTIG_POSTPROCESSING.out.processed_contigs
+    versions         = ch_versions
 
 }

@@ -24,6 +24,7 @@ process CONTIG_POSTPROCESSING {
 
     output:
     tuple val(meta), path('*.processed_contigs.fasta.gz'), emit: processed_contigs
+    path  "versions.yml"                                 , emit: versions
 
     script:
     """
