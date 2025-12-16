@@ -43,20 +43,18 @@ workflow MG_ASSEMBLER {
     //
     // POSTPROCESSING
     //
-    POSTPROCESSING_METAGENOME_ASSEMBLY()
+    POSTPROCESSING_METAGENOME_ASSEMBLY(METAGENOME_ASSEMBLING.out.contigs)
 
     //
     // FINAL_QC
     //
-    QC_METAGENOME_ASSEMBLY()
+    QC_METAGENOME_ASSEMBLY(POSTPROCESSING_METAGENOME_ASSEMBLY.out.prepared_contigs)
 
     //
     // Collecting QC & versions data
     //
     ch_multiqc_files = ch_multiqc_files.mix(
         FASTQ_PREPROCESSING.out.ch_multiqc_files,
-        METAGENOME_ASSEMBLING.out.ch_multiqc_files,
-        POSTPROCESSING_METAGENOME_ASSEMBLY.out.ch_multiqc_files,
         QC_METAGENOME_ASSEMBLY.out.ch_multiqc_files
     )
 

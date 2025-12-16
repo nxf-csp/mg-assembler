@@ -1,5 +1,4 @@
 include { SPADES } from '../../../modules/local/spades'
-include { CONTIG_POSTPROCESSING } from '../../../modules/local/contig_postprocessing'
 
 workflow METAGENOME_ASSEMBLING {
     take:
@@ -40,21 +39,10 @@ workflow METAGENOME_ASSEMBLING {
            sewage
           )
 
-    CONTIG_POSTPROCESSING(
-                          SPADES.out.contigs,
-                          params.ctg_min_len,
-                          params.ctg_basename,
-                          params.ctg_description,
-                          params.ctg_additional_meta,
-                         )
-
-    ch_versions.mix(
-        SPADES.out.versions,
-        CONTIG_POSTPROCESSING.out.versions
-    )
+    ch_versions.mix(SPADES.out.versions)
 
     emit:
-    prepared_contigs = CONTIG_POSTPROCESSING.out.processed_contigs
-    versions         = ch_versions
+    contigs  = SPADES.out.contigs
+    versions = ch_versions
 
 }
