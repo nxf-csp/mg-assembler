@@ -39,7 +39,7 @@ workflow FASTQ_PREPROCESSING {
         )
 
     emit:
-    ch_versions
-    ch_multiqc_files
-    prepared_fastqs  = FASTP.out.reads.join(FASTP.out.reads_unpaired, by: 0)
+    versions        = ch_versions
+    mqc_files       = ch_multiqc_files
+    prepared_fastqs = FASTP.out.reads.join(FASTP.out.reads_unpaired, by: 0)
 }

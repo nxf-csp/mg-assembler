@@ -16,7 +16,7 @@ workflow QC_METAGENOME_ASSEMBLY {
     ch_versions = ch_versions.mix(SEQKIT_STATS.out.versions)
 
     emit:
-    ch_versions
-    ch_multiqc_files
+    versions  = ch_versions
+    mqc_files = ch_multiqc_files
 
 }
