@@ -54,8 +54,8 @@ workflow MG_ASSEMBLER {
     // Collecting QC & versions data
     //
     ch_multiqc_files = ch_multiqc_files.mix(
-        FASTQ_PREPROCESSING.out.mqc_files,
-        QC_METAGENOME_ASSEMBLY.out.mqc_files
+        FASTQ_PREPROCESSING.out.mqc_files.map {it[1]},
+        QC_METAGENOME_ASSEMBLY.out.mqc_files.map {it[1]}
     )
 
     ch_versions = ch_versions.mix(

@@ -23,7 +23,7 @@ process CONTIG_POSTPROCESSING {
     val(additional_meta)
 
     output:
-    tuple val(meta), path('*.processed_contigs.fasta.gz'), emit: processed_contigs
+    tuple val(meta), path('*.processed.fa.gz'), emit: processed_contigs
     path  "versions.yml"                                 , emit: versions
 
     script:
@@ -33,6 +33,9 @@ process CONTIG_POSTPROCESSING {
 
     # Обработка
     process_contigs.py ${min_len} ${contig_basename} ${description} ${additional_meta}
+
+    # Запаковка
+    gzip *.processed.fa
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

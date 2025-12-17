@@ -3,6 +3,7 @@
 import sys
 from Bio import SeqIO # type: ignore
 from pathlib import Path
+import os
 
 def process_contigs(
                     unfiltered_contigs: Path,
@@ -30,32 +31,29 @@ def process_contigs(
     :return: Код возврата: 0 при успешном выполнении, 1 при возникновении исключения.
     """
     def get_new_filename(
-                         old_filename: Path,
-                         old_substring: str,
-                         new_substring: str
+                         old_filename: Path
                         ) -> Path:
         """
-        Заменяет подстроки в базовом имени файла
+        Заменяет подстроки в базовом имени FASTA-файла
         """
-        new_file_basename = old_filename.name.replace(old_substring, new_substring)
+        new_file_basename = old_filename.name.replace('.fasta', '.fa').replace('.fa', '.processed.fa')
         return old_filename.parent / new_file_basename
     
+    print("Обработка контигов...")
     exit_code = 0
     if unfiltered_contigs.exists(follow_symlinks=True):
-        filtered_contigs = get_new_filename(unfiltered_contigs, '.fa', 'processed_contigs.fa')
+        filtered_contigs = get_new_filename(unfiltered_contigs)
         try:
             with open(unfiltered_contigs, 'r') as i_file, open(filtered_contigs, 'a') as o_file:
                 for contig in SeqIO.parse(i_file, "fasta"):
                     # Фильтрация по длине
                     if len(contig.seq) < min_len:
                         continue
-
                     # Извлечение информации из исходного ID (формат SPAdes: NODE_1_length_2097_cov_3.0)
                     contig_name_parts = contig.id.split("_")
                     if len(contig_name_parts) < 6:
                         print(f"Некорректный формат ID контига: {contig.id}. Пропускаем.")
                         continue
-
                     # Переименовываем контиг
                     contig.id = f"{contig_basename}_{contig_name_parts[1]}"
 
@@ -83,7 +81,7 @@ def process_contigs(
             print(f"Неожиданная ошибка при обработке контигов: {e}")
             return 1
     else:
-        print("В рабочей папке не найдены FASTA-файлы")
+        print("FASTA-файл не существует")
         exit_code = 127
     return exit_code
 
@@ -93,19 +91,30 @@ if __name__ == "__main__":
 
     min_len = int(sys.argv[1])
     contig_basename = sys.argv[2]
-    description = bool(sys.argv[3])
-    additional_meta = sys.argv[4]
-    
+    description = False
+    additional_meta = ""
+    match len(sys.argv):
+        case 4:
+            description = bool(sys.argv[3])
+        case 5:
+            description = bool(sys.argv[3])
+            additional_meta = sys.argv[4]
+    description = False
+    additional_meta = ""
+    #os.system("ls")
     raw_fastas = []
     for ext in fasta_extensions:
-        ext_fastas = [f for f in Path('./').rglob(pattern=ext)]
+        ext_fastas = [f for f in Path('./').resolve().rglob(pattern=f"*{ext}")]
+        print(ext, ext_fastas)
         raw_fastas.extend(ext_fastas)
-
+    print(f"Found fastas:{'\n\t'.join([f.as_posix() for f in raw_fastas])}")
     for raw_fasta in raw_fastas:
-        process_contigs(
+        exit_code = process_contigs(
                         unfiltered_contigs=raw_fasta,
                         min_len=min_len,
                         contig_basename=contig_basename,
                         description=description,
                         additional_meta=additional_meta
                        )
+        if exit_code != 0:
+            print(f"Exit_code: {exit_code}")

@@ -19,7 +19,10 @@ workflow FASTQ_PREPROCESSING {
     FASTQC_RAW(MERGE_LANES.out.fastqs)
     
     // Тримминг, фильтрация, дедупликация
-    FASTP(MERGE_LANES.out.fastqs)
+    // Вместо adapter_fasta - пустой список
+    ch_fastq = MERGE_LANES.out.fastqs.map {meta, reads ->
+        [meta, reads, []]}
+    FASTP(ch_fastq)
 
     // Вторичный QC
     FASTQC_TRIMMED(FASTP.out.reads)

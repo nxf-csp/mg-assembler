@@ -4,9 +4,7 @@ process SPADES {
     label 'process_high'
 
     conda "${moduleDir}/environment.yml"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/7b/7b7b68c7f8471d9111841dbe594c00a41cdd3b713015c838c4b22705cfbbdfb2/data' :
-        'community.wave.seqera.io/library/spades:4.1.0--77799c52e1d1054a' }"
+    container "quay.io/biocontainers/spades:4.2.0--h8d6e82b_2"
 
     input:
     tuple val(meta), path(illumina), path(illumina_unpaired), path(pacbio), path(nanopore)
@@ -43,7 +41,7 @@ process SPADES {
     def prefix = task.ext.prefix ?: "${meta.id}"
     def maxmem = task.memory.toGiga()
     def illumina_reads = illumina ? ( meta.single_end ? "-s $illumina" : "-1 ${illumina[0]} -2 ${illumina[1]}" ) : ""
-    def illumina_reads_unpaired = illumina_unpaired ? "--pe1-s ".join(illumina_unpaired) : ""
+    def illumina_reads_unpaired = illumina_unpaired ? illumina_unpaired.collect { "--pe1-s $it" }.join(' ') : ""
     def pacbio_reads = pacbio ? "--pacbio $pacbio" : ""
     def nanopore_reads = nanopore ? "--nanopore $nanopore" : ""
     def custom_hmms = hmm ? "--custom-hmms $hmm" : ""
@@ -60,19 +58,19 @@ process SPADES {
     def mode_bio = bio ? "--bio": ""
     def mode_corona = corona ? "--corona": ""
     def mode_sewage = sewage ? "--sewage": ""
-    def mode = " ".join([
-                         mode_isolate,
-                         mode_metagenome,
-                         mode_single_cell,
-                         mode_rna,
-                         mode_rna_viral,
-                         mode_meta_viral,
-                         mode_plasmid,
-                         mode_meta_plasmid,
-                         mode_bio,
-                         mode_corona,
-                         mode_sewage
-                        ])
+    def mode = [
+                mode_isolate,
+                mode_metagenome,
+                mode_single_cell,
+                mode_rna,
+                mode_rna_viral,
+                mode_meta_viral,
+                mode_plasmid,
+                mode_meta_plasmid,
+                mode_bio,
+                mode_corona,
+                mode_sewage
+               ].findAll { it }.join(' ')  // findAll { it } убирает пустые строки
 
     """
     spades.py \\
